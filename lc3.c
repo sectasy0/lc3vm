@@ -59,6 +59,7 @@ extern uint16_t reg[R_COUNT];
 uint16_t sign_extend(uint16_t x, int bit_count);
 void read_image_file(FILE* file);
 void update_flags(uint16_t r);
+uint16_t swap16(uint16_t x);
 
 
 int main(int argc, const char* argv[]) {
@@ -293,6 +294,7 @@ void read_image_file(FILE* file) {
     }
 }
 
+
 int read_image(const char* image_path) {
     FILE* file = fopen(image_path, "rb");
     if (!file) { return 0; }
@@ -301,5 +303,9 @@ int read_image(const char* image_path) {
     fclose(file);
 
     return 1;
+}
+
+uint16_t swap16(uint16_t x) {
+    return (x << 8) | (x >> 8);
 }
 
