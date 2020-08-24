@@ -7,6 +7,7 @@
 extern uint16_t memory[UINT16_MAX];
 extern uint16_t reg[R_COUNT];
 
+void men_write(uint16_t address, uint16_t value);
 uint16_t sign_extend(uint16_t x, int bit_count);
 void read_image_file(FILE* file);
 void update_flags(uint16_t r);
@@ -260,3 +261,20 @@ uint16_t swap16(uint16_t x) {
     return (x << 8) | (x >> 8);
 }
 
+void men_write(uint16_t address, uint16_t value) {
+    memory[address] = value;
+}
+
+uint16_t mem_read(uint16_t address) {
+    if (address == MR_KBSR) {
+        if (check_key()) {
+            memory[MR_KBSR] = (1 << 15);
+            memory[MR_KBDR] = getchar();
+        }
+        else {
+            memory[MR_KBSR] = 0;
+        }
+    }
+
+    return memory[address];
+}

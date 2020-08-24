@@ -48,3 +48,8 @@ extern enum {
     TRAP_PUTSP = 0x24, // output a byte
     TRAP_HALT = 0x25 // halt the program
 };
+
+extern enum {
+    MR_KBSR = 0xFE00, // Keyboard status
+    MR_KBDR = 0xFE02 // Keyboard data;
+};
