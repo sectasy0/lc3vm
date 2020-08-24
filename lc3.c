@@ -2,9 +2,6 @@
 #include <stdio.h>
 #include <stdint.h>
 
-uint16_t memory[UINT16_MAX];
-uint16_t reg[R_COUNT];
-
 /* Registers */
 enum {
     R_R0 = 0,
@@ -47,9 +44,26 @@ enum {
     FL_NEG = 1 << 2
 };
 
+extern uint16_t memory[UINT16_MAX];
+extern uint16_t reg[R_COUNT];
+
+uint16_t sign_extend(uint16_t x, int bit_count);
+void update_flags(uint16_t r);
+
 
 int main(int argc, const char* argv[]) {
     /* { LOAD ARGUMENTS } */
+    if (argc < 2) {
+        printf("lc3 [image-file1] ...\n");
+        exit(2);
+    }
+
+    for (int j = 1; j < argc; ++j) {
+        if (!read_image(argv[j])) {
+            printf("failed to load image: %s\n", argv[j]);
+            exit(1);
+        }
+    }
     /* { SETUP } */
 
     /* set the PC to starting pos */
@@ -114,4 +128,23 @@ int main(int argc, const char* argv[]) {
         }
     }
     /* SHUTDOWN */
+}
+
+uint16_t sign_extend(uint16_t x, int bit_count) {
+    if ((x >> (bit_count - 1)) & 1) {
+        x |= (0xFFFF << bit_count);
+    }
+    return x;
+}
+
+void update_flags(uint16_t r) {
+    if (reg[r] == 0) {
+        reg[R_COND] = FL_ZRO;
+    }
+    else if (reg[r] >> 15) {
+        reg[R_COND] = FL_NEG;
+    }
+    else {
+        reg[R_COND] = FL_POS;
+    }
 }
