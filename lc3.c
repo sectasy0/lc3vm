@@ -203,22 +203,46 @@ int main(int argc, const char* argv[]) {
             case OP_TRAP:
                 switch (instr & 0xFF) {
                     case TRAP_GETC: 
-                        // TRAP_GETC
+                        reg[R_R0] = (uint16_t)getchar();
                         break;
                     case TRAP_OUT: 
-                        // TRAP_OUT
+                        putc((char)reg[R_R0], stdout);
+                        fflush(stdout);
                         break;
-                    case TRAP_PUTS: 
-                        // TRAP_PUTS
+                    case TRAP_PUTS:;
+                        uint16_t* c = memory + reg[R_R0];
+                        while (*c) {
+                            putc((char)*c, stdout);
+                            ++c;
+                        }
+
+                        fflush(stdout);
                         break;
                     case TRAP_IN: 
-                        // TRAP_IN
+                        printf("//# ");
+                        char c = getchar();
+                        putc(c, stdout);
+                        reg[R_R0] = (uint16_t)c;
                         break;
-                    case TRAP_PUTSP: 
-                        // TRAP_PUTSP
+                    case TRAP_PUTSP:;
+                        /* one char per byte (two bytes per word)
+                           here we need to swap back to
+                           big endian format */
+                        uint16_t* c = memory + reg[R_R0];
+                        while (*c) {
+                            char char1 = (*c) & 0xFF;
+                            putc(char1, stdout);
+                            char char2 = (*c) >> 8;
+                            if (char2) putc(char2, stdout);
+                            ++c;
+                        }
+
+                        fflush(stdout);
                         break;
                     case TRAP_HALT: 
-                        // TRAP_HALT
+                        puts("HALT");
+                        fflush(stdout);
+                        running = 0;
                         break;
                     }
                 break;
