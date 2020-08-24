@@ -43,6 +43,15 @@ enum {
     FL_ZRO = 1 << 1,
     FL_NEG = 1 << 2
 };
+// TRAP CODES
+enum {
+    TRAP_GETC = 0x20, // get character from keyboard
+    TRAP_OUT = 0x21, // output character
+    TRAP_PUTS = 0x22, // output a word string
+    TRAP_IN = 0x23, // get character from keyboard, echoed onto the terminal
+    TRAP_PUTSP = 0x24, // output a byte
+    TRAP_HALT = 0x25 // halt the program
+};
 
 extern uint16_t memory[UINT16_MAX];
 extern uint16_t reg[R_COUNT];
@@ -78,7 +87,7 @@ int main(int argc, const char* argv[]) {
         uint16_t op = instr >> 12;
 
         switch (op) {
-        case OP_ADD:;
+            case OP_ADD:;
                 // destination register - DR
                 uint16_t r0 = (instr >> 9) & 0x7;
                 // first operand - SR1
@@ -161,7 +170,7 @@ int main(int argc, const char* argv[]) {
                 // add pc_offset to the current PC, look at that memory location to get the final address
                 reg[r0] = mem_read(mem_read(reg[R_PC] + pc_offset));
                 update_flags(r0);
-                break;
+                    break;
             case OP_LDR:;
                 uint16_t r0 = (instr >> 9) & 0x7;
                 uint16_t r1 = (instr >> 6) & 0x7;
@@ -192,7 +201,26 @@ int main(int argc, const char* argv[]) {
                 mem_write(reg[r1] + offset, reg[r0]);
                 break;
             case OP_TRAP:
-                /* TRAP */
+                switch (instr & 0xFF) {
+                    case TRAP_GETC: 
+                        // TRAP_GETC
+                        break;
+                    case TRAP_OUT: 
+                        // TRAP_OUT
+                        break;
+                    case TRAP_PUTS: 
+                        // TRAP_PUTS
+                        break;
+                    case TRAP_IN: 
+                        // TRAP_IN
+                        break;
+                    case TRAP_PUTSP: 
+                        // TRAP_PUTSP
+                        break;
+                    case TRAP_HALT: 
+                        // TRAP_HALT
+                        break;
+                    }
                 break;
             case OP_RES:
             case OP_RTI:
