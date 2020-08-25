@@ -6,10 +6,10 @@
 #include "codes.c"
 #include "windows.c"
 
-extern uint16_t memory[UINT16_MAX];
-extern uint16_t reg[R_COUNT];
+uint16_t memory[UINT16_MAX];
+uint16_t reg[R_COUNT];
 
-void men_write(uint16_t address, uint16_t value);
+void mem_write(uint16_t address, uint16_t value);
 uint16_t sign_extend(uint16_t x, int bit_count);
 void read_image_file(FILE* file);
 uint16_t mem_read(uint16_t address);
@@ -24,7 +24,6 @@ void handle_interrupt(int signal) {
 
 
 int main(int argc, const char* argv[]) {
-    /* { LOAD ARGUMENTS } */
     if (argc < 2) {
         printf("lc3 [image-file1] ...\n");
         exit(2);
@@ -36,12 +35,10 @@ int main(int argc, const char* argv[]) {
             exit(1);
         }
     }
-    /* { SETUP } */
+
     signal(SIGINT, handle_interrupt);
     disable_input_buffering();
 
-    // set the PC to starting pos */
-    // 0x3000 is the default
     enum { PC_START = 0x3000 };
     reg[R_PC] = PC_START;
 
@@ -53,11 +50,8 @@ int main(int argc, const char* argv[]) {
 
         switch (op) {
             case OP_ADD:; {
-                // destination register - DR
                 uint16_t r0 = (instr >> 9) & 0x7;
-                // first operand - SR1
                 uint16_t r1 = (instr >> 6) & 0x7;
-                // whether we are in immediate mode
                 uint16_t imm_flag = (instr >> 5) & 0x1;
 
                 if (imm_flag) {
@@ -133,11 +127,8 @@ int main(int argc, const char* argv[]) {
             }
                 break;
             case OP_LDI:; {
-                // DR
                 uint16_t r0 = (instr >> 9) & 0x7;
-                // PCoffset 9
                 uint16_t pc_offset = sign_extend(instr & 0x1FF, 9);
-                // add pc_offset to the current PC, look at that memory location to get the final address
                 reg[r0] = mem_read(mem_read(reg[R_PC] + pc_offset));
                 update_flags(r0);
             }
@@ -202,9 +193,6 @@ int main(int argc, const char* argv[]) {
                         reg[R_R0] = (uint16_t)c;
                         break;
                     case TRAP_PUTSP:; {
-                        /* one char per byte (two bytes per word)
-                           here we need to swap back to
-                           big endian format */
                         uint16_t* c = memory + reg[R_R0];
                         while (*c) {
                             char char1 = (*c) & 0xFF;
@@ -231,7 +219,6 @@ int main(int argc, const char* argv[]) {
                 break;
         }
     }
-    /* SHUTDOWN */
     restore_input_buffering();
 }
 
@@ -240,6 +227,10 @@ uint16_t sign_extend(uint16_t x, int bit_count) {
         x |= (0xFFFF << bit_count);
     }
     return x;
+}
+
+uint16_t swap16(uint16_t x) {
+    return (x << 8) | (x >> 8);
 }
 
 void update_flags(uint16_t r) {
@@ -255,12 +246,10 @@ void update_flags(uint16_t r) {
 }
 
 void read_image_file(FILE* file) {
-    // the origin tells where in memory to place the image
     uint16_t origin;
     fread(&origin, sizeof(origin), 1, file);
     origin = swap16(origin);
 
-    // we know the maximum file size so we only need one fread
     uint16_t max_read = UINT16_MAX - origin;
     uint16_t* p = memory + origin;
     size_t read = fread(p, sizeof(uint16_t), max_read, file);
@@ -273,7 +262,8 @@ void read_image_file(FILE* file) {
 
 
 int read_image(const char* image_path) {
-    FILE* file = fopen(image_path, "rb");
+    FILE* file;
+    fopen_s(&file, image_path, "rb");
     if (!file) { return 0; }
 
     read_image_file(file);
@@ -282,11 +272,7 @@ int read_image(const char* image_path) {
     return 1;
 }
 
-uint16_t swap16(uint16_t x) {
-    return (x << 8) | (x >> 8);
-}
-
-void men_write(uint16_t address, uint16_t value) {
+void mem_write(uint16_t address, uint16_t value) {
     memory[address] = value;
 }
 
